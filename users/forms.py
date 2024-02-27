@@ -16,7 +16,7 @@ class LoginUsersForm(AuthenticationForm):
 
 
 class RegisterUsersForm(UserCreationForm):
-    username = forms.CharField(label="Foydalanuvchi nomini kiriting",
+    username = forms.CharField(label="Foydalanuvchi usernameni kiriting",
                                widget=forms.TextInput(attrs={'class': 'form-input'}))
     password1 = forms.CharField(label="Parol", widget=forms.PasswordInput(attrs={'class': "form-input"}))
     password2 = forms.CharField(label="Parolni tasdiqlash", widget=forms.PasswordInput(attrs={'class': "form-input"}))
@@ -25,7 +25,6 @@ class RegisterUsersForm(UserCreationForm):
         model = get_user_model()
         fields = ['username', 'email', 'first_name', 'last_name', 'password1', 'password2']
         labels = {'last_name': 'Familiyangizni kiriting',
-                  'email': 'E-mail',
                   'first_name': 'Ismingizni kiriting'}
         widgets = {'last_name': forms.TextInput(attrs={'class': 'form-input'}),
                    'email': forms.TextInput(attrs={'class': 'form-input'}),
@@ -37,8 +36,8 @@ class RegisterUsersForm(UserCreationForm):
             raise forms.ValidationError("Parollar bir-biriga mos kelamdi")
         return cd['password1']
 
-    def clean_email(self):
-        email = self.cleaned_data['email']
-        if get_user_model().objects.filter(email=email).exists():
-            raise forms.ValidationError("Bunday email bilan oldin ro'yhatdan o'tilgan")
-        return email
+    def clean_phone_number(self):
+        phone_number = self.cleaned_data['phone_number']
+        if get_user_model().objects.filter(phone_number=phone_number).exists():
+            raise forms.ValidationError("Bunday telefon raqam bilan oldin ro'yhatdan o'tilgan")
+        return phone_number

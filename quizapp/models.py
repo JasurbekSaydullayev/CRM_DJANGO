@@ -1,47 +1,55 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from .validators import validate_difficulty_question
+
 User = get_user_model()
 
 
-class QuizType(models.Model):
-    name = models.CharField(max_length=50)
+class Subject(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50, unique=True)
+
+    def __str__(self):
+        return self.name
+
+
+class SubjectCategory(models.Model):
+    id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=50, unique=True)
+    subject = models.ForeignKey(Subject, to_field="name",
+                                on_delete=models.CASCADE, related_name='subjectcategory')
 
     def __str__(self):
         return self.name
 
 
 class Question(models.Model):
-    quiz = models.ForeignKey(QuizType, on_delete=models.CASCADE)
-    name = models.TextField()
-
-    def is_right_answer(self, pk):
-        return self.answers.filter(pk=pk, is_right=True).exists()
+    id = models.AutoField(primary_key=True)
+    question_text = models.TextField(default="Savol")
+    subject_name = models.ForeignKey(Subject, to_field="name", default="Matematika", on_delete=models.CASCADE, related_name='question')
+    subject_category = models.ForeignKey(SubjectCategory, to_field="name",
+                                         on_delete=models.CASCADE, related_name='question', null=True, blank=True)
+    difficulty_level = models.IntegerField(default=1, validators=[validate_difficulty_question])
 
     def __str__(self):
-        return self.name
+        return self.question_text
 
 
 class Answer(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answers')
-    name = models.CharField(max_length=255)
+    id = models.AutoField(primary_key=True)
+    text = models.TextField(null=True, blank=True)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='answer')
     is_right = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.name
+        return self.text
 
 
-class Result(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='results')
-    total_question = models.IntegerField()
-    corrent_question = models.IntegerField()
-    create_at = models.DateTimeField(auto_now_add=True)
-    quiz = models.ForeignKey(QuizType, on_delete=models.CASCADE)
-    total = models.FloatField(default=0)
+class WrongAnswer(models.Model):
+    from users.models import User
+    question_id = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='wronganswers')
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wronganswers')
 
     def __str__(self):
-        return self.user.username
-
-    def save(self, *args, **kwargs):
-        self.total = round((100 * self.corrent_question) / self.total_question, 2)
-        return super().save(*args, **kwargs)
+        return self.user_id
